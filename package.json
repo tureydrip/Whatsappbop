@@ -1,16 +1,15 @@
 {
-  "name": "whatsapp-store-bot",
+  "name": "luck-bot-whatsapp",
   "version": "1.0.0",
-  "description": "Bot tienda automatica WhatsApp",
-  "main": "index.js",
+  "description": "Bot de WhatsApp para Luck Xit",
+  "main": "bot.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node index.js"
+    "start": "node bot.js"
   },
-  "author": "Luck Xit",
-  "license": "MIT",
   "dependencies": {
-    "firebase": "^10.12.2",
-    "puppeteer": "^22.10.0",
-    "whatsapp-web.js": "^1.25.0"
+    "firebase": "^10.8.0",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
   }
 }

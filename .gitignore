@@ -1,4 +1,3 @@
-node_modules
-.session
-auth
-*.log
+node_modules/
+.wwebjs_auth/
+.env

@@ -1,0 +1,16 @@
+{
+  "name": "whatsapp-store-bot",
+  "version": "1.0.0",
+  "description": "Bot tienda automatica WhatsApp",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Luck Xit",
+  "license": "MIT",
+  "dependencies": {
+    "firebase": "^10.12.2",
+    "puppeteer": "^22.10.0",
+    "whatsapp-web.js": "^1.25.0"
+  }
+}

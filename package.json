@@ -1,20 +1,15 @@
 {
-  "name": "temo-store",
+  "name": "luck-xit-bots",
   "version": "1.0.0",
-  "description": "Bot de tienda automatica para Telegram",
-  "main": "index.js",
+  "description": "Bot de LUCK XIT OFC para descargas",
+  "main": "bot.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node bot.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^7.0.0-rc.9",
-    "firebase": "^12.10.0",
-    "firebase-admin": "^13.6.0",
-    "node-telegram-bot-api": "^0.67.0",
-    "pino": "^10.3.0"
-  },
-  "keywords": [],
-  "author": "Temo Store",
-  "license": "ISC"
+    "firebase": "^10.8.1",
+    "node-telegram-bot-api": "^0.65.0",
+    "youtube-dl-exec": "^2.5.0"
+  }
 }

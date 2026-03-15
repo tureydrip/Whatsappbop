@@ -77,7 +77,7 @@ botTiktok.onText(/\/start/, async (msg) => {
                   "👋 ¡Hola! Soy un bot totalmente gratuito para descargar videos.\n\n" +
                   `📊 *Usuarios totales que me usan:* ${totalUsuarios}\n\n` +
                   "📖 *¿Cómo usar el bot?*\n" +
-                  "Simplemente envíame un enlace válido de **TikTok** o **YouTube** (hasta 20 minutos de duración) y yo me encargaré de enviarte el video al instante. 🚀";
+                  "Simplemente envíame un enlace válido de **TikTok** o **YouTube** y yo me encargaré de enviarte el video al instante. 🚀";
 
   const opciones = {
     parse_mode: "Markdown",
@@ -129,48 +129,67 @@ botTiktok.on('message', async (msg) => {
   else if (text.includes('youtube.com') || text.includes('youtu.be')) {
     const waitMsg = await botTiktok.sendMessage(chatId, "⏳ Descargando video de YouTube, esto puede tardar unos momentos...");
     
-    // Generar un nombre temporal único para evitar conflictos si 2 personas descargan al tiempo
+    // Generar un nombre temporal único
     const outputFilename = `luck_xit_yt_${chatId}_${Date.now()}.mp4`;
 
     try {
-      // Configuraciones idénticas a las de tu Python adaptadas a la librería de Node.js
+      console.log(`[YT-DLP] Intentando descargar: ${text.trim()}`);
+      
+      // Configuración simplificada y más estable
       await youtubedl(text.trim(), {
-        f: 'best[ext=mp4][filesize<49M]/best[ext=mp4]', // Busca mp4 que pese menos de 50MB (límite de Telegram)
-        matchFilter: 'duration <= 1200', // Límite exacto de 20 minutos en segundos
-        mergeOutputFormat: 'mp4',
+        format: 'best', // Descarga la mejor calidad que venga en un solo archivo
         output: outputFilename,
-        noWarnings: true
+        noWarnings: true,
+        noCheckCertificates: true
       });
+
+      console.log(`[YT-DLP] Descarga completada. Verificando archivo...`);
 
       // Validar si el archivo de verdad se descargó
       if (fs.existsSync(outputFilename)) {
+        
+        // Verificar el peso para que Telegram no rechace el envío (Límite 50MB)
+        const stats = fs.statSync(outputFilename);
+        const fileSizeInMegabytes = stats.size / (1024 * 1024);
+        
+        if (fileSizeInMegabytes > 49) {
+            fs.unlinkSync(outputFilename); // Borrar el archivo pesado
+            throw new Error("FILE_TOO_LARGE");
+        }
+
         await botTiktok.sendVideo(chatId, outputFilename, { 
             caption: `✅ ¡Aquí tienes tu video de YouTube!\n\n📊 *Usuarios totales en tiempo real:* ${totalUsuarios}\n🤖 _Bot by: sebastian (LUCK XIT OFC)_`, 
             parse_mode: "Markdown" 
         });
         
-        // Borramos el video del servidor después de enviarlo para no llenar tu disco
+        // Borramos el video del servidor después de enviarlo
         fs.unlinkSync(outputFilename);
         botTiktok.deleteMessage(chatId, waitMsg.message_id).catch(()=>{});
+        console.log(`[YT-DLP] Video enviado exitosamente al chat ${chatId}`);
+
       } else {
-        throw new Error("No se pudo crear el archivo.");
+        throw new Error("El archivo no se generó correctamente.");
       }
 
     } catch (error) {
+      console.error("❌ ERROR REAL DE YOUTUBE:", error); 
+      
       botTiktok.deleteMessage(chatId, waitMsg.message_id).catch(()=>{});
       
-      const errorStr = error.message || "";
-      // Manejo de errores basado en los filtros de yt-dlp
-      if (errorStr.includes('duration')) {
-        botTiktok.sendMessage(chatId, "❌ El video excede el límite de 20 minutos permitidos.");
-      } else if (errorStr.includes('filesize') || errorStr.includes('too large')) {
-        botTiktok.sendMessage(chatId, "❌ El video es demasiado pesado para ser enviado por Telegram (Límite máximo de 50MB).");
+      const errorStr = (error.message || "").toUpperCase();
+      
+      if (errorStr.includes('FILE_TOO_LARGE')) {
+        botTiktok.sendMessage(chatId, "❌ El video supera los 50MB, Telegram no permite enviar archivos tan pesados por bots normales.");
+      } else if (errorStr.includes('SIGN IN') || errorStr.includes('403')) {
+        botTiktok.sendMessage(chatId, "❌ YouTube bloqueó la descarga temporalmente (Protección anti-bots). Intenta más tarde.");
       } else {
-        botTiktok.sendMessage(chatId, "❌ Error al descargar el video. Asegúrate de que el enlace sea correcto y el video no sea privado.");
+        botTiktok.sendMessage(chatId, "❌ Error al procesar la descarga de YouTube. Revisa el enlace.");
       }
 
       // Si falló a la mitad, borramos el rastro del archivo corrupto
-      if (fs.existsSync(outputFilename)) fs.unlinkSync(outputFilename);
+      if (fs.existsSync(outputFilename)) {
+          try { fs.unlinkSync(outputFilename); } catch(e){}
+      }
     }
   } 
   

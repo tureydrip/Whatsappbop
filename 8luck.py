@@ -10,7 +10,7 @@ import requests
 
 app = Flask(__name__)
 
-# Configuraci贸n de directorios temporales
+# Configuración de directorios temporales
 TEMP_DIR = tempfile.gettempdir()
 DOWNLOAD_DIR = os.path.join(TEMP_DIR, 'index99')
 MEDIA_DIR = os.path.join(DOWNLOAD_DIR, 'media')
@@ -25,7 +25,7 @@ def is_tiktok_url(url):
     return 'tiktok.com' in url.lower() or 'vm.tiktok.com' in url.lower()
 
 def get_tiktok_info(url):
-    """Obtiene informaci贸n de TikTok usando TIKWM API"""
+    """Obtiene información de TikTok usando TIKWM API"""
     try:
         response = requests.post(TIKWM_API, data={
             'url': url,
@@ -47,12 +47,12 @@ def index9():
 
 @app.route('/media/<path:filename>')
 def serve_media(filename):
-    """Sirve archivos de media para previsualizaci贸n"""
+    """Sirve archivos de media para previsualización"""
     return send_from_directory(MEDIA_DIR, filename)
 
 @app.route('/preview', methods=['POST'])
 def preview():
-    """Obtiene informaci贸n y descarga temporal para previsualizaci贸n"""
+    """Obtiene información y descarga temporal para previsualización"""
     try:
         url = request.form.get('url', '').strip()
         if not url:
@@ -65,19 +65,19 @@ def preview():
             tiktok_data = get_tiktok_info(url)
             
             if not tiktok_data:
-                return jsonify({'error': 'No se pudo obtener informaci贸n de TikTok'}), 500
+                return jsonify({'error': 'No se pudo obtener información de TikTok'}), 500
             
-            # Detectar si es galer铆a de im谩genes (slideshow)
+            # Detectar si es galería de imágenes (slideshow)
             images = tiktok_data.get('images', [])
             
             if images:
-                # Es una galer铆a de im谩genes
+                # Es una galería de imágenes
                 return jsonify({
                     'success': True,
                     'type': 'gallery',
                     'platform': 'tiktok',
                     'images': images,
-                    'title': tiktok_data.get('title', 'Galer铆a de TikTok'),
+                    'title': tiktok_data.get('title', 'Galería de TikTok'),
                     'thumbnail': images[0] if images else None,
                     'image_count': len(images),
                     'author': tiktok_data.get('author', {}).get('unique_id', 'Desconocido'),
@@ -108,7 +108,7 @@ def preview():
                 except Exception as e:
                     print(f"Error descargando video preview de TikTok: {e}")
                 
-                # Audio preview (m煤sica del video)
+                # Audio preview (música del video)
                 audio_preview_path = None
                 try:
                     music_url = tiktok_data.get('music_info', {}).get('play')
@@ -154,7 +154,7 @@ def preview():
             thumbnails = info.get('thumbnails', [])
             thumbnail = thumbnails[-1]['url'] if thumbnails else info.get('thumbnail')
 
-            # Descargar versi贸n preview del video
+            # Descargar versión preview del video
             video_preview_path = None
             try:
                 preview_name = f'preview_video_{timestamp}'
@@ -205,7 +205,7 @@ def preview():
                 'success': True,
                 'type': 'video',
                 'platform': 'other',
-                'title': info.get('title', 'Sin t铆tulo'),
+                'title': info.get('title', 'Sin título'),
                 'thumbnail': thumbnail,
                 'video_url': video_preview_path,
                 'audio_url': audio_preview_path,
@@ -219,7 +219,7 @@ def preview():
 
 @app.route('/download', methods=['POST'])
 def download():
-    """Descarga el video, audio o galer铆a"""
+    """Descarga el video, audio o galería"""
     try:
         url = request.form.get('url', '').strip()
         kind = request.form.get('kind', 'video')
@@ -234,13 +234,13 @@ def download():
             tiktok_data = get_tiktok_info(url)
             
             if not tiktok_data:
-                return jsonify({'error': 'No se pudo obtener informaci贸n de TikTok'}), 500
+                return jsonify({'error': 'No se pudo obtener información de TikTok'}), 500
             
-            # Galer铆a de im谩genes
+            # Galería de imágenes
             if kind == 'gallery':
                 images = tiktok_data.get('images', [])
                 if not images:
-                    return jsonify({'error': 'No se encontraron im谩genes'}), 404
+                    return jsonify({'error': 'No se encontraron imágenes'}), 404
                 
                 import zipfile
                 zip_filename = f'luck_xit_tiktok_gallery_{timestamp}.zip'
@@ -267,7 +267,7 @@ def download():
             elif kind == 'video':
                 video_url = tiktok_data.get('hdplay') or tiktok_data.get('play')
                 if not video_url:
-                    return jsonify({'error': 'No se encontr贸 URL del video'}), 404
+                    return jsonify({'error': 'No se encontró URL del video'}), 404
                 
                 video_filename = f'luck_xit_tiktok_{timestamp}.mp4'
                 video_path = os.path.join(DOWNLOAD_DIR, video_filename)
@@ -285,11 +285,11 @@ def download():
                         download_name=video_filename
                     )
             
-            # Audio (m煤sica del TikTok)
+            # Audio (música del TikTok)
             elif kind == 'audio':
                 music_url = tiktok_data.get('music_info', {}).get('play')
                 if not music_url:
-                    return jsonify({'error': 'No se encontr贸 audio'}), 404
+                    return jsonify({'error': 'No se encontró audio'}), 404
                 
                 audio_filename = f'luck_xit_tiktok_audio_{timestamp}.mp3'
                 audio_path = os.path.join(DOWNLOAD_DIR, audio_filename)
@@ -325,7 +325,7 @@ def download():
             mimetype = 'audio/mpeg'
         else:  # video
             ydl_opts = {
-                'format': 'best[ext=mp4]/best',
+                'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                 'outtmpl': output_template,
                 'quiet': True,
                 'no_warnings': True,
@@ -361,7 +361,7 @@ def download():
 
 @app.route('/health')
 def health():
-    """Endpoint para verificar que el servidor est谩 funcionando"""
+    """Endpoint para verificar que el servidor está funcionando"""
     return jsonify({'status': 'ok', 'message': 'LUCK XIT Server Running'})
 
 def cleanup_temp_files():
@@ -390,19 +390,19 @@ def cleanup_temp_files():
 if __name__ == '__main__':
     cleanup_temp_files()
     print("=" * 60)
-    print("馃敟 LUCK XIT - Media Downloader Server")
+    print("🔥 LUCK XIT - Media Downloader Server")
     print("=" * 60)
-    print("馃摗 Servidor iniciado en: http://0.0.0.0:8080")
-    print("馃寪 Accede desde tu navegador a: http://localhost:8080")
+    print("📡 Servidor iniciado en: http://0.0.0.0:8080")
+    print("🌐 Accede desde tu navegador a: http://localhost:8080")
     print("=" * 60)
-    print("鉁� Funcionalidades:")
-    print("   鉁� TikTok: API TIKWM (videos, galer铆as, audio)")
-    print("   鉁� Otras plataformas: yt-dlp")
-    print("   鉁� Previsualizaci贸n de videos y audio")
-    print("   鉁� Descargas en MP4, MP3 o ZIP")
+    print("✅ Funcionalidades:")
+    print("   ✅ TikTok: API TIKWM (videos, galerías, audio)")
+    print("   ✅ Otras plataformas: yt-dlp (YouTube, Instagram, etc)")
+    print("   ✅ Previsualización de videos y audio")
+    print("   ✅ Descargas en MP4, MP3 o ZIP")
     print("=" * 60)
-    print("鈿狅笍  Requisitos:")
+    print("⚠️  Requisitos:")
     print("   - pip install flask yt-dlp requests")
-    print("   - FFmpeg (para conversi贸n de audio)")
+    print("   - FFmpeg (INDISPENSABLE para convertir y unir audios/videos)")
     print("=" * 60)
     app.run(host='0.0.0.0', port=8081, debug=True)
